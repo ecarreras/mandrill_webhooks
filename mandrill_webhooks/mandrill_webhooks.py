@@ -41,6 +41,21 @@ class MandrillWebhooks(object):
         mandrill_events = request.form.get('mandrill_events')
         if not mandrill_events:
             raise BadRequest('No valid payload detected')
+        mandrill_events = json.loads(mandrill_events)
+        for payload in mandrill_events:
+            event = payload.get('event')
+            if not event:
+                # Mandrill webhooks are not unified for sync events
+                event = payload.get('action')
+            if not event:
+                raise BadRequest('No event defined in payload')
+            broadcast_signal = signal('*')
+            if broadcast_signal.receivers:
+                broadcast_signal.send(payload, event=event)
+            event_signal = signal(event)
+            if event_signal.receivers:
+                event_signal.send(payload)
+        return 'Hook delivered', 200
 
     @staticmethod
     def hook(event):
