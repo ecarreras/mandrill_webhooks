@@ -10,6 +10,18 @@ from flask import request
 from werkzeug.exceptions import BadRequest
 
 
+import sys
+
+if sys.version < '3':
+    def b(x):
+        return x
+else:
+    import codecs
+
+    def b(x):
+        return codecs.latin_1_encode(x)[0]
+
+
 class MandrillWebhooks(object):
     def __init__(self, app=None):
         """Init method.
@@ -33,6 +45,21 @@ class MandrillWebhooks(object):
             return
         if request.method == 'HEAD':
             return
+        #if not self.app.debug:
+        if True:
+            key = self.app.config.get('MANDRILL_WEBHOOKS_KEY')
+            api_url = self.app.config.get('MANDRILL_WEBHOOKS_URL')
+            signature = request.headers.get('X-Mandrill-Signature')
+            if not signature:
+                raise BadRequest('This missage is not signed')
+            if key:
+                payload = api_url
+                post = request.form
+                for key in sorted(post.keys()):
+                    payload += '%s%s' % (key, post[key])
+                digest = b64encode(hmac.new(b(key), b(payload), sha1))
+                if digest != signature:
+                    raise BadRequest('Wrong HMAC signature')
 
     @staticmethod
     def raise_signal():
