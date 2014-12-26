@@ -5,7 +5,7 @@ import hmac
 from hashlib import sha1
 import json
 
-from blinker import signal
+import blinker
 from flask import request
 from werkzeug.exceptions import BadRequest
 
@@ -29,6 +29,7 @@ class MandrillWebhooks(object):
         self.app = app
         if app is not None:
             self.init_app(app)
+        self.namespace = blinker.Namespace()
 
     def init_app(self, app):
         app.before_request(self.validate_signature)
@@ -61,8 +62,7 @@ class MandrillWebhooks(object):
                 if digest != signature:
                     raise BadRequest('Wrong HMAC signature')
 
-    @staticmethod
-    def raise_signal():
+    def raise_signal(self):
         if request.method == 'HEAD':
             return 'To be or not to be...', 200
         mandrill_events = request.form.get('mandrill_events')
@@ -76,18 +76,17 @@ class MandrillWebhooks(object):
                 event = payload.get('action')
             if not event:
                 raise BadRequest('No event defined in payload')
-            broadcast_signal = signal('*')
+            broadcast_signal = self.namespace.signal('*')
             if broadcast_signal.receivers:
                 broadcast_signal.send(payload, event=event)
-            event_signal = signal(event)
+            event_signal = self.namespace.signal(event)
             if event_signal.receivers:
                 event_signal.send(payload)
         return 'Hook delivered', 200
 
-    @staticmethod
-    def hook(event):
+    def hook(self, event):
         def _wrapper(fn):
-            event_signal = signal(event)
+            event_signal = self.namespace.signal(event)
             event_signal.connect(fn)
             return fn
         return _wrapper
