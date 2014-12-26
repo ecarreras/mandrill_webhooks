@@ -34,6 +34,21 @@ class MandrillWebhooks(object):
             return
         if request.method == 'HEAD':
             return
+        #if not self.app.debug:
+        if True:
+            key = self.app.config.get('MANDRILL_WEBHOOKS_KEY')
+            api_url = self.app.config.get('MANDRILL_WEBHOOKS_URL')
+            signature = request.headers.get('X-Mandrill-Signature')
+            if not signature:
+                raise BadRequest('This missage is not signed')
+            if key:
+                payload = api_url
+                post = request.form
+                for post_key in sorted(post.keys()):
+                    payload += '%s%s' % (post_key, post[post_key])
+                digest = b64encode(hmac.new(key, payload, sha1).digest())
+                if digest != signature:
+                    raise BadRequest('Wrong HMAC signature')
 
     def raise_signal(self):
         if request.method == 'HEAD':
