@@ -5,7 +5,7 @@ import hmac
 from hashlib import sha1
 import json
 
-from blinker import signal
+import blinker
 from flask import request
 from werkzeug.exceptions import BadRequest
 
