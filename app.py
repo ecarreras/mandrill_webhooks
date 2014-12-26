@@ -3,10 +3,14 @@ import os
 from flask import Flask
 from mandrill_webhooks import MandrillWebhooks
 
+
+from osconf import config_from_environment
+
 app = Flask(__name__)
 
-if os.getenv('MANDRILL_WEBHOOKS_SETTINGS'):
-    app.config.from_envvar('MANDRILL_WEBHOOKS_SETTINGS')
+
+for k, v in config_from_environment('MANDRILL_WEBHOOKS').items():
+    app.config['MANDRILL_WEBHOOKS_%s' % k.upper()] = v
 
 mandrill = MandrillWebhooks(app)
 
