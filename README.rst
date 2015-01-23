@@ -1,6 +1,8 @@
 Mandrill Webhooks
 =================
 
+|Flattr this repo|
+
 Simple Flask extension to register functions to a mandrill hook
 
 
@@ -30,3 +32,6 @@ Simple Flask extension to register functions to a mandrill hook
     def another_open_event(payload):
         """This is another event code."""
         pass
+
+.. |Flattr this repo| image:: http://api.flattr.com/button/flattr-badge-large.png
+   :target: https://flattr.com/submit/auto?user_id=ecarreras&url=https://github.com/ecarreras/mandrill_webhooks&title=mandrill_webhooks&language=Python&tags=github&category=software
