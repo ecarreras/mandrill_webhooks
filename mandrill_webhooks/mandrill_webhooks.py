@@ -20,7 +20,8 @@ class MandrillWebhooks(object):
         self.namespace = blinker.Namespace()
 
     def init_app(self, app):
-        app.before_request(self.validate_signature)
+        self.app = app
+        self.app.before_request(self.validate_signature)
         self.set_defaults()
         prefix = self.app.config['MANDRILL_WEBHOOKS_PREFIX']
         app.add_url_rule(prefix, 'raise_signal', self.raise_signal,
